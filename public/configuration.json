@@ -1,0 +1,77 @@
+{
+    "CORSProxy": "https://corsproxy.io/?",
+    "calenderSources": [
+        {
+            "id": "feier",
+            "description": "Feiertage",
+            "cssclass": "feriertag",
+            "showDescription": false,
+            "timeless": true,
+            "icalSrc": "https://www.feiertage-oesterreich.at/content/kalender-download/force-download.php"
+        },
+        {
+            "id": "ferien",
+            "description": "Ferien",
+            "cssclass": "ferien",
+            "showDescription": false,
+            "timeless": true,
+            "icalSrc": "https://www.feiertage-oesterreich.at/content/kalender-download/force-download-school-holidays.php?region=N%C3%96"
+        },
+        {
+            "id": "wiwoe",
+            "description": "Wichtel & Wölflinge",
+            "cssclass": "wiwoe",
+            "showDescription": true,
+            "timeless": false,
+            "icalSrc": "https://calendar.google.com/calendar/ical/a099e00543b616fed2ae3d680ff04dbd76aed8dccc8c7e796a198bea706c9b2a%40group.calendar.google.com/public/basic.ics"
+        },
+        {
+            "id": "gusp",
+            "description": "Guides & Späher",
+            "cssclass": "gusp",
+            "showDescription": true,
+            "timeless": false,
+            "icalSrc": "https://calendar.google.com/calendar/ical/1adf19db83284aaa0bfb8fed2c0f72e44ce94e53a75c0f202fc31cdba9d8ab4e%40group.calendar.google.com/public/basic.ics"
+        },
+        {
+            "id": "caex",
+            "description": "Caravelles & Explorer",
+            "cssclass": "caex",
+            "showDescription": true,
+            "timeless": false,
+            "icalSrc": "https://calendar.google.com/calendar/ical/8609cf54b769090a50ef056878d6697595811eb24b2e486467d3fbd7330960fc%40group.calendar.google.com/public/basic.ics"
+        },
+        {
+            "id": "raro",
+            "description": "Ranger & Rover",
+            "cssclass": "raro",
+            "showDescription": true,
+            "timeless": false,
+            "icalSrc": "https://calendar.google.com/calendar/ical/54f2c3b56798e27a293a4c63ac5234abf60d6fd37a4a9ea6a2e86a95d91ce206%40group.calendar.google.com/public/basic.ics"
+        },
+        {
+            "id": "erat",
+            "description": "Elternrat",
+            "cssclass": "erat",
+            "showDescription": true,
+            "timeless": false,
+            "icalSrc": "https://calendar.google.com/calendar/ical/82552bba125f828a36c4e802941af3141b52fb4193850e0cba539a23de09b0c5%40group.calendar.google.com/public/basic.ics"
+        },
+        {
+            "id": "heim",
+            "description": "Heimvermietung",
+            "cssclass": "heim",
+            "showDescription": true,
+            "timeless": false,
+            "icalSrc": "https://calendar.google.com/calendar/ical/c8cb6dfd28d73a3cf1814ea52f4826c28ba28e5f1543a78111f3be5c6d5c07ea%40group.calendar.google.com/public/basic.ics"
+        },
+        {
+            "id": "bus",
+            "description": "Busvermietung",
+            "cssclass": "bus",
+            "showDescription": true,
+            "timeless": false,
+            "icalSrc": "https://calendar.google.com/calendar/ical/4983015c31103a16024f2fb13a21265d8cee6d2787409610560119528227e055%40group.calendar.google.com/public/basic.ics"
+        }
+    ]
+}
