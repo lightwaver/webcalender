@@ -4,7 +4,7 @@
         {
             "id": "feier",
             "description": "Feiertage",
-            "cssclass": "feriertag",
+            "cssclass": "feiertag",
             "showDescription": false,
             "timeless": true,
             "icalSrc": "https://www.feiertage-oesterreich.at/content/kalender-download/force-download.php"

@@ -1,17 +1,15 @@
 <template>
   <div class="legendContainer">
     Legende:
-  <span class="legend wiwoe">Wichtel & Wölflinge (WiWö)</span>
-  <span class="legend gusp">Guides & Späher (GuSp)</span>
-  <span class="legend caex">Caravalles & Explorer (CaEx)</span>
-  <span class="legend raro">Ranger & Rover</span>
-  <span class="legend erat">Elternrat und Gilde</span>
-  <span class="legend heim">Heimvermietung </span>
-  <span class="legend bus">Busvermietung</span>
-  <span class="legend feiertag">Feiertag</span>
-  <span class="legend ferien">Ferien</span>
-</div>
+    <span v-for="(l, ix) in labels" :class="['legend', l.css]">{{ l.label }}</span>
+  </div>
   <!-- https://antoniandre.github.io/vue-cal/?ref=madewithvuejs.com -->
+  <v-progress-linear indeterminate v-if="loading > 0" color="#903035" height="5"></v-progress-linear>
+
+<!-- 
+  <style v-for=""></style>
+-->
+
   <VueCal locale="de" :disableViews="['years', 'year']" overlaps-per-time-step :time-step="120" today-button
     :events="events" :time-from="8 * 60" :time-to="22 * 60" events-on-month-view="short" showAllDayEvents
     :on-event-click="onEventClick" active-view="month">
@@ -58,6 +56,7 @@ import HelloWorld from '@/components/HelloWorld.vue';
 import 'vue-cal/dist/vuecal.css';
 import ical from 'node-ical';
 import { setImmediate } from 'timers';
+import { clearScreenDown } from "readline";
 
 declare interface EventEntry {
   start: Date | string;
@@ -67,12 +66,27 @@ declare interface EventEntry {
   class: string;
   allDay: boolean;
 }
+declare interface CalConfigEntry {
+  id: string,
+  description: string,
+  cssclass: string,
+  showDescription: boolean,
+  timeless: boolean,
+  icalSrc: string,
+  color: string,
+}
+declare interface Configuration {
+  CORSProxy: string;
+  calenderSources: CalConfigEntry[];
+}
+
 const showDialog = ref(false);
 const events = ref<EventEntry[]>([]);
 const selectedEvent = ref<any>();
 
+
 if (!window.setImmediate || !setImmediate) {
-  window.setImmediate = <any>((x: () =>void) =>{
+  window.setImmediate = <any>((x: () => void) => {
     console.log("ups setImmediate called");
     x();
   });
@@ -97,83 +111,93 @@ function addDays(dateOld: Date, days: number) {
 function removeTime(date: Date) {
   return date.toISOString().substring(0, 10);
 }
+let corsUrl = "";
 
-function getCal(calUrl: string, cssclass: string, nodescription: boolean = false, timeless: boolean = false) {
-  ical.async.fromURL("https://corsproxy.io/?" + encodeURIComponent(calUrl))
-    .then(icalevents =>{
-      for (const entry of Object.values(icalevents)) {
-        const event: any = entry;
-        if (!event.summary) continue;
+async function getCal(calUrl: string, cssclass: string, nodescription: boolean = false, timeless: boolean = false, color?: string) {
 
-        const content = nodescription ? "" : event.description;
+  if (corsUrl) calUrl = corsUrl + encodeURIComponent(calUrl);
+  const icalevents = await ical.async.fromURL(calUrl);
 
-        let allDay = (new Date(event.start).getHours() == 0 && new Date(event.end).getHours() == 0);
-        if (event.type === 'VEVENT' && event.rrule) {
-          const dates = event.rrule.between(addDays(new Date(), -21), addDays(new Date(), 256))
-          if (dates.length === 0) { continue; }
-          const diff = event.end.valueOf() - event.start.valueOf();
+  if (color) {
+    dynCssClasses.value.push({name: "dc" + dynCssClasses.value.length, color});
+    cssclass += " dc" + dynCssClasses.value.length;
+  }
 
-          dates.forEach((date: Date) =>{
-            let start: Date | string = date;
-            let end: Date | string = new Date(date.valueOf() + diff);
+  for (const entry of Object.values(icalevents)) {
+    const event: any = entry;
+    if (!event.summary) continue;
 
-            if (timeless) {
-              start = end = removeTime(date);
-              allDay = true;
-            }
-            events.value.push({
-              start,
-              end,
-              title: event.summary,
-              class: cssclass,
-              content,
-              allDay
-            });
-          });
-        } else {
-          let start = event.start;
-          let end = event.end;
+    const content = nodescription ? "" : event.description;
 
-          if (timeless) {
-            start = end = removeTime(start);
-            allDay = true;
-          }
+    let allDay = (new Date(event.start).getHours() == 0 && new Date(event.end).getHours() == 0);
+    if (event.type === 'VEVENT' && event.rrule) {
+      const dates = event.rrule.between(addDays(new Date(), -21), addDays(new Date(), 256))
+      if (dates.length === 0) { continue; }
+      const diff = event.end.valueOf() - event.start.valueOf();
 
-          events.value.push({
-            start: event.start,
-            end: event.end,
-            title: event.summary,
-            class: cssclass,
-            content,
-            allDay
-          });
+      dates.forEach((date: Date) => {
+        let start: Date | string = date;
+        let end: Date | string = new Date(date.valueOf() + diff);
+
+        if (timeless) {
+          start = end = removeTime(date);
+          allDay = true;
         }
+        events.value.push({
+          start,
+          end,
+          title: event.summary,
+          class: cssclass,
+          content,
+          allDay
+        });
+      });
+    } else {
+      let start = event.start;
+      let end = event.end;
+
+      if (timeless) {
+        start = end = removeTime(start);
+        allDay = true;
       }
-    });
+
+      events.value.push({
+        start: event.start,
+        end: event.end,
+        title: event.summary,
+        class: cssclass,
+        content,
+        allDay
+      });
+    }
+  }
 }
-
-getCal("https://www.feiertage-oesterreich.at/content/kalender-download/force-download.php", "feiertag", true, true);
-getCal("https://www.feiertage-oesterreich.at/content/kalender-download/force-download-school-holidays.php?region=N%C3%96", "ferien", true, true);
-
-getCal("https://calendar.google.com/calendar/ical/a099e00543b616fed2ae3d680ff04dbd76aed8dccc8c7e796a198bea706c9b2a%40group.calendar.google.com/public/basic.ics",
-  "wiwoe");
-getCal("https://calendar.google.com/calendar/ical/1adf19db83284aaa0bfb8fed2c0f72e44ce94e53a75c0f202fc31cdba9d8ab4e%40group.calendar.google.com/public/basic.ics",
-  "gusp");
-getCal("https://calendar.google.com/calendar/ical/8609cf54b769090a50ef056878d6697595811eb24b2e486467d3fbd7330960fc%40group.calendar.google.com/public/basic.ics",
-  "caex");
-getCal("https://calendar.google.com/calendar/ical/54f2c3b56798e27a293a4c63ac5234abf60d6fd37a4a9ea6a2e86a95d91ce206%40group.calendar.google.com/public/basic.ics",
-  "raro");
-getCal("https://calendar.google.com/calendar/ical/82552bba125f828a36c4e802941af3141b52fb4193850e0cba539a23de09b0c5%40group.calendar.google.com/public/basic.ics",
-  "erat");
-getCal("https://calendar.google.com/calendar/ical/c8cb6dfd28d73a3cf1814ea52f4826c28ba28e5f1543a78111f3be5c6d5c07ea%40group.calendar.google.com/public/basic.ics",
-  "heim");
-getCal("https://calendar.google.com/calendar/ical/4983015c31103a16024f2fb13a21265d8cee6d2787409610560119528227e055%40group.calendar.google.com/public/basic.ics",
-  "bus");
+const dynCssClasses = ref<{ name:string, color: string }[]>([]);
+const labels = ref<{ label: string, css: string }[]>([]);
+const errors = ref<string[]>([]);
+const loading = ref(1);
+fetch("configuration.json").then(async (result) => {
+  const config = (await result.json()) as Configuration;
+  corsUrl = config.CORSProxy;
+  loading.value += config.calenderSources.length;
+  config.calenderSources.forEach(cal => {
+    getCal(cal.icalSrc, cal.cssclass, !cal.showDescription, cal.timeless, cal.color)
+      .then(() => {
+        labels.value.push({ label: cal.description, css: cal.cssclass });
+        loading.value--;
+      })
+      .catch(e => {
+        errors.value.push("error loading calender:" + cal.description + " - " + e);
+        loading.value--;
+      })
+  })
+  loading.value--;
+});
 </script>
 <style>
 .wiwoe {
   background-color: #FBBB21;
-  color:black;
+  color: black;
 }
 
 .gusp {
@@ -193,7 +217,7 @@ getCal("https://calendar.google.com/calendar/ical/4983015c31103a16024f2fb13a2126
 
 .erat {
   background-color: #A6E1FF;
-  color:black;
+  color: black;
 }
 
 .heim {
@@ -203,12 +227,12 @@ getCal("https://calendar.google.com/calendar/ical/4983015c31103a16024f2fb13a2126
 
 .bus {
   background-color: lightgrey;
-  color:black;
+  color: black;
 }
 
 .feiertag {
   background-color: lightsalmon;
-  color:black;
+  color: black;
 }
 
 .ferien {
@@ -221,12 +245,18 @@ getCal("https://calendar.google.com/calendar/ical/4983015c31103a16024f2fb13a2126
   line-height: 1em;
   cursor: pointer;
 }
+
 .legendContainer {
   text-align: center;
 }
+
 .legend {
-  display:inline-block;
+  display: inline-block;
   white-space: nowrao;
   padding: 3px 10px;
+}
+
+.vuecal--years-view .vuecal__cell-content, .vuecal--year-view .vuecal__cell-content, .vuecal--month-view .vuecal__cell-content {
+    justify-content: start;
 }
 </style>
