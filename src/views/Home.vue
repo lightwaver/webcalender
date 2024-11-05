@@ -155,6 +155,9 @@ async function getCal(
   timeless: boolean = false,
   color?: string
 ) {
+  const isCurrentDST = momenttz(moment(new Date())).isDST();
+
+
   if (corsUrl) calUrl = corsUrl + encodeURIComponent(calUrl);
   const icalevents = await ical.async.fromURL(calUrl);
 
@@ -186,10 +189,12 @@ async function getCal(
       const diff = event.end.valueOf() - event.start.valueOf();
 
       dates.forEach((date: Date) => {
+        const isDST = momenttz(moment(date)).isDST();
 
         let start: Date | string = date;
         if (event.rrule.origOptions.tzid) {
           // tzid present (calculate offset from recurrence start)
+          
           const dateTimezone = moment.tz.zone("UTC");
           const localTimezone = moment.tz.guess();
           const tz =
@@ -198,7 +203,10 @@ async function getCal(
               : localTimezone;
           const timezone = moment.tz.zone(tz);
           const offset = timezone!.utcOffset(date.valueOf()) + dateTimezone!.utcOffset(date.getDate());
+          
           start = moment(date).add(offset*-1, "minutes").toDate();
+
+
         } else {
           // tzid not present (calculate offset from original start)
           start = new Date(
@@ -209,6 +217,14 @@ async function getCal(
             )
           );
         }
+
+        const beforeDST = start;
+        if (isDST !== isCurrentDST) {
+          if (isDST) start = moment(start).add(-120, "minutes").toDate();
+          if (!isDST) start = moment(start).add(120, "minutes").toDate();
+        }
+
+        console.log("DST:" + isDST + "-" + isCurrentDST + " - " + beforeDST + " -> " + start);
 
         let end: Date | string = new Date(start.valueOf() + diff);
 
