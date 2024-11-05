@@ -14,16 +14,19 @@
     "core-js": "^3.29.0",
     "googleapis": "^127.0.0",
     "material-icons": "^1.13.12",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.5.46",
     "node-ical": "^0.16.1",
     "roboto-fontface": "*",
     "timers": "^0.1.1",
     "vue": "^3.2.0",
     "vue-cal": "^4.8.1",
     "vue-router": "^4.0.0",
-    "vuetify": "^3.0.0"
+    "vuetify": "^3.0.0",
+    "webcalender": "file:."
   },
   "devDependencies": {
-    "@babel/types": "^7.21.4",
+    "@babel/types": "^7.26.0",
     "@types/node": "^18.15.0",
     "@vitejs/plugin-vue": "^4.0.0",
     "@vue/eslint-config-typescript": "^11.0.0",
